@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Task - TaskFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Skip Link -->
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <main id="main-content">
+
+        <!-- Mobile Navigation (for consistency) -->
+        <button class="mobile-menu-toggle" style="display: none;" aria-label="Open navigation menu">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Header -->
+        <header class="section-padding">
+            <div class="container">
+                <div class="card">
+                    <div class="card-header">
+                        {% if task.id %}
+                            <h1 class="card-title">
+                                <i class="fa-solid fa-pen-circle"></i> Edit Task
+                            </h1>
+                        {% else %}
+                            <h1 class="card-title">
+                                <i class="fa-solid fa-plus-circle"></i> Add New Task
+                            </h1>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Form -->
+        <div class="container">
+            <div class="card">
+                <form method="POST" action="{{ url_for('edit_task', task_id=task.id if task else '') }}">
+                    <div class="card-body">
+                        
+                        {% with messages = get_flashed_messages(with_categories=true) %}
+                          {% if messages %}
+                            <div class="alert alert-{{ category }}" style="margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: 8px; border-left: 4px solid;">
+                              {% for cat, msg in messages %}
+                                {{ msg }}
+                              {% endfor %}
+                            </div>
+                          {% endif %}
+                        {% endwith %}
+
+                        {% if task %}
+                            <input type="hidden" name="original_title" value="{{ task.title }}">
+                        {% endif %}
+
+                        <div class="form-group">
+                            <label for="title" class="form-group-label">Task Title <span class="text-error">*</span></label>
+                            <input type="text" id="title" name="title" required 
+                                   class="form-input" 
+                                   value="{{ task.title if task else '' }}"
+                                   placeholder="Enter task title">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="description" class="form-group-label">Description</label>
+                            <textarea id="description" name="description" rows="3" 
+                                      class="form-textarea"
+                                      placeholder="Enter task description">{{ task.description if task and task.description else '' }}</textarea>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="category" class="form-group-label">Category</label>
+                                <select name="category" class="form-select">
+                                    <option value="Work"{% if task and task.category == 'Work' %} selected{% endif %}>Work</option>
+                                    <option value="Personal"{% if task and task.category == 'Personal' %} selected{% endif %}>Personal</option>
+                                    <option value="Learning"{% if task and task.category == 'Learning' %} selected{% endif %}>Learning</option>
+                                    <option value="Shopping"{% if task and task.category == 'Shopping' %} selected{% endif %}>Shopping</option>
+                                    <option value="Other"{% if not task or task.category == 'Other' %} selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="priority" class="form-group-label">Priority</label>
+                                <select name="priority" class="form-select">
+                                    <option value="Low"{% if task and task.priority == 'Low' %} selected{% endif %}>Low</option>
+                                    <option value="Medium"{% if task and task.priority == 'Medium' %} selected{% endif %} selected>Medium</option>
+                                    <option value="High"{% if task and task.priority == 'High' %} selected{% endif %}>High</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="status" class="form-group-label">Status</label>
+                                <select name="status" class="form-select">
+                                    <option value="Pending"{% if task and task.status == 'Pending' %} selected{% endif %}>Pending</option>
+                                    <option value="In Progress"{% if task and task.status == 'In Progress' %} selected{% endif %}>In Progress</option>
+                                    <option value="Completed"{% if task and task.status == 'Completed' %} selected{% endif %} selected>Completed</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="due_date" class="form-group-label">Due Date</label>
+                                <input type="date" id="due_date" name="due_date"
+                                       class="form-input"
+                                       value="{{ task.due_date.strftime('%Y-%m-%d') if task and task.due_date else '' }}"
+                                       {% if not task.due_date %}disabled{% endif %}>
+                                <small class="text-secondary">Leave empty if no deadline</small>
+                            </div>
+                        </div>
+                        
+                        <div class="card-footer">
+                            {% if task %}
+                                <!-- Delete button shows warning -->
+                                <button type="submit" name="action" value="delete" 
+                                        class="btn-danger"
+                                        onclick="return confirm('Are you sure you want to delete this task?');">
+                                    <i class="fa-solid fa-trash"></i> Delete Task
+                                </button>
+                                <br><br>
+                            {% endif %}
+                            
+                            <button type="submit" name="action" value="save" class="btn-primary">
+                                <i class="fa-solid fa-save"></i> Save Changes
+                            </button>
+                            
+                            <button type="button" class="btn-secondary" 
+                                    onclick="window.history.back()">
+                                <i class="fa-solid fa-arrow-left"></i> Cancel
+                            </button>
+                        </div>
+                        
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Chart.js CDN (for potential future use) -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0"></script>
+
+    <script>
+    // Focus the title input on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const titleInput = document.getElementById('title');
+        if (titleInput) {
+            titleInput.focus();
+        }
+    });
+    </script>
+</body>
+</html>

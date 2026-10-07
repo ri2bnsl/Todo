@@ -2,7 +2,7 @@
 
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
+from datetime import datetime, date
 import os
 
 # 1. Create the Flask app instance
@@ -394,8 +394,28 @@ def search_tasks():
 # 13. Error handler for 404
 @app.errorhandler(404)
 def page_not_found(e):
-    """Custom 404 page"""
-    return render_template('index.html'), 404
+    """Custom 404 page - redirects to index with required context"""
+    # Provide minimal context to avoid template errors
+    return render_template(
+        'index.html',
+        total_tasks=0,
+        completed_tasks=0,
+        pending_tasks=0,
+        in_progress_tasks=0,
+        overdue_tasks=0,
+        completion_percentage=0,
+        category_counts={'Work': 0, 'Personal': 0, 'Learning': 0, 'Shopping': 0, 'Other': 0},
+        priority_counts={'Low': 0, 'Medium': 0, 'High': 0},
+        category_labels=['Work', 'Personal', 'Learning', 'Shopping', 'Other'],
+        category_data=[0, 0, 0, 0, 0],
+        completion_dates=[],
+        completion_counts=[],
+        sort_by='due_date',
+        sort_order='asc',
+        valid_sort_fields=['due_date', 'priority', 'created_at', 'status'],
+        today=date.today(),
+        tasks=[]
+    ), 404
 
 # 14. Initialize the database and run the app
 if __name__ == '__main__':
